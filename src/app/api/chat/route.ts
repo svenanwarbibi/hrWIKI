@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { env } from "@/lib/env";
 
+// n8n antwortet gemessen 15-35s (RAG-Retrieval + LLM) — über Vercels
+// Standard-Timeout für Serverless Functions. Explizit anheben.
+export const maxDuration = 60;
+
 const requestSchema = z.object({
   projectId: z.string().min(1),
   sessionId: z.string(),
