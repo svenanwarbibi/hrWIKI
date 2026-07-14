@@ -14,10 +14,10 @@ export function SourceCitation({ message }: { message: UIMessage }) {
   if (!sourcesPart || sourcesPart.data.sources.length === 0) return null;
 
   return (
-    <ul className="mt-2 space-y-1 border-t pt-2 text-xs text-neutral-500">
+    <ul className="mt-2 space-y-1 border-t border-plan-black/10 pt-2 text-xs text-slate-gray">
       {sourcesPart.data.sources.map((s) => (
         <li key={s.documentId}>
-          <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="underline">
+          <a href={s.sourceUrl} target="_blank" rel="noreferrer" className="underline hover:text-ci">
             {s.title}
           </a>
         </li>

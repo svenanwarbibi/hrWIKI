@@ -16,10 +16,8 @@ export function MessageBubble({ message }: { message: UIMessage }) {
     <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
       <div
         className={cn(
-          "max-w-[85%] rounded-lg px-4 py-2 text-sm",
-          isUser
-            ? "bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900"
-            : "bg-neutral-100 dark:bg-neutral-800",
+          "max-w-[85%] px-4 py-2 text-sm text-plan-black",
+          isUser ? "font-medium" : "border-l-2 border-ci pl-4",
         )}
       >
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>

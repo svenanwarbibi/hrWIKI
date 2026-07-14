@@ -1,18 +1,34 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Design-Tokens aus DESIGN.md (hirnerundriehl.de-Scrape, siehe /DESIGN.md).
+ * Ein Akzentton (--color-ci), sonst rein achromatisch. Kein Radius, kein Schatten.
+ */
+@theme {
+  --color-ci: #23aecc;
+  --color-plan-black: #000000;
+  --color-sheet-white: #ffffff;
+  --color-mid-gray: #808080;
+  --color-slate-gray: #545454;
+
+  --font-sans: var(--font-nunito-sans), "Nunito Sans", sans-serif;
+  --font-display: var(--font-roboto-slab), "Roboto Slab", serif;
+
+  --radius-none: 0px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: var(--color-sheet-white);
+  --foreground: var(--color-plan-black);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
+  font-weight: 300;
+}
+
+/* Primäre/Footer-Navigation: durchgängig Kleinschreibung, unabhängig vom Markup (siehe DESIGN.md §3, §7) */
+.nav-lowercase {
+  text-transform: lowercase;
 }

@@ -4,6 +4,7 @@ import { z } from "zod";
 export const runtime = "edge";
 
 const requestSchema = z.object({
+  projectId: z.string().min(1),
   sessionId: z.string(),
   message: z.string().min(1),
   history: z.array(

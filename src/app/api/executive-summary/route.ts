@@ -1,7 +1,11 @@
 import { callN8nWebhook } from "@/lib/n8n";
 import type { ExecutiveSummary } from "@/types";
 
-export const revalidate = 300;
+// force-dynamic statt revalidate: sonst versucht Next.js, diese Route beim
+// Build statisch zu prerendern und ruft dabei n8n live an (bricht den Build,
+// wenn n8n nicht erreichbar ist). Revalidate steuert stattdessen der
+// aufrufende Page-Fetch (next: { revalidate }).
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const upstream = await callN8nWebhook("/webhook/executive-summary");

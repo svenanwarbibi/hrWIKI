@@ -62,3 +62,63 @@ export interface ApiError {
     message: string;
   };
 }
+
+export type ProjectStatus = "in_progress" | "completed" | "planned";
+
+export interface ProjectSummary {
+  id: string;
+  slug: string;
+  title: string;
+  client: string;
+  category: string;
+  status: ProjectStatus;
+  thumbnailUrl?: string;
+}
+
+export interface ProjectListResponse {
+  updatedAt: string;
+  projects: ProjectSummary[];
+}
+
+export interface ProjectExecutiveSummary {
+  aufgabe: string;
+  herausforderungen: string;
+  ergebnis: string;
+}
+
+export interface ProjectBudget {
+  currency: string;
+  plan: number;
+  actual: number | null;
+}
+
+export interface ExternalProvider {
+  id: string;
+  name: string;
+  category: string;
+  address: string;
+}
+
+export interface InternalStaffMember {
+  id: string;
+  name: string;
+  role: string;
+}
+
+export interface ProjectKpis {
+  client: string;
+  startDate: string;
+  endDate: string;
+  budget: ProjectBudget;
+  externalProviders: ExternalProvider[];
+  internalStaff: InternalStaffMember[];
+}
+
+export interface Project {
+  id: string;
+  slug: string;
+  title: string;
+  updatedAt: string;
+  executiveSummary: ProjectExecutiveSummary;
+  kpis: ProjectKpis;
+}

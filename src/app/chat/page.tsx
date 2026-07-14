@@ -1,10 +1,7 @@
-import { ChatWindow } from "@/components/chat/ChatWindow";
+import { redirect } from "next/navigation";
 
+// Chat ist jetzt projektgescoped (siehe docs/data-contract.md, Abschnitt 1) und
+// lebt auf der jeweiligen Projektseite (/projects/[slug]), nicht mehr generisch.
 export default function ChatPage() {
-  return (
-    <main className="mx-auto flex h-screen max-w-3xl flex-col px-6 py-8">
-      <h1 className="mb-4 text-xl font-semibold">HRWIKI Chat</h1>
-      <ChatWindow />
-    </main>
-  );
+  redirect("/projects");
 }

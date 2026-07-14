@@ -1,11 +1,14 @@
 import type { ContactsResponse, InternalContact } from "@/types";
 import { ContactCard } from "@/components/contacts/ContactCard";
+import { callN8nWebhook } from "@/lib/n8n";
+
+// force-dynamic: Server Components dürfen nicht ihre eigene Route per
+// relativer URL fetchen (bricht beim Build, siehe api/executive-summary/route.ts)
+// — daher direkter n8n-Aufruf statt Round-Trip über /api/contacts.
+export const dynamic = "force-dynamic";
 
 async function getInternalContacts(): Promise<ContactsResponse> {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/api/contacts?type=internal`,
-    { next: { revalidate: 900 } },
-  );
+  const res = await callN8nWebhook("/webhook/contacts?type=internal");
   return res.json();
 }
 

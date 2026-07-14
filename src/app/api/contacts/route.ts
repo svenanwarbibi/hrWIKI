@@ -1,7 +1,8 @@
 import { callN8nWebhook } from "@/lib/n8n";
 import type { ContactsResponse } from "@/types";
 
-export const revalidate = 900;
+// force-dynamic statt revalidate, siehe Kommentar in api/executive-summary/route.ts
+export const dynamic = "force-dynamic";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
