@@ -1,11 +1,3 @@
-export interface ChatSource {
-  documentId: string;
-  title: string;
-  sourceUrl: string;
-  chunkExcerpt: string;
-  score: number;
-}
-
 export interface ExecutiveSummary {
   updatedAt: string;
   headline: string;

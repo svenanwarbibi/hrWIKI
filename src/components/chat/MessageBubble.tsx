@@ -1,16 +1,16 @@
-import type { UIMessage } from "ai";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeSanitize from "rehype-sanitize";
 import { cn } from "@/lib/utils";
-import { SourceCitation } from "./SourceCitation";
 
-export function MessageBubble({ message }: { message: UIMessage }) {
+export interface ChatMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+}
+
+export function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
-  const text = message.parts
-    .filter((p) => p.type === "text")
-    .map((p) => p.text)
-    .join("");
 
   return (
     <div className={cn("flex", isUser ? "justify-end" : "justify-start")}>
@@ -21,9 +21,8 @@ export function MessageBubble({ message }: { message: UIMessage }) {
         )}
       >
         <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeSanitize]}>
-          {text}
+          {message.content}
         </ReactMarkdown>
-        {!isUser && <SourceCitation message={message} />}
       </div>
     </div>
   );

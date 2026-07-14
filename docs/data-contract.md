@@ -88,9 +88,44 @@ Für `/projects/[slug]`. Liefert alle Daten für Executive Summary und KPI-Berei
 
 ---
 
-## 1. Chat / RAG — `POST /webhook/chat`
+## 1. Chat / RAG — n8n Chat Trigger (Ist-Zustand)
 
-Der zentrale dynamische Endpunkt. Nimmt eine Nutzerfrage entgegen, führt Retrieval + LLM-Generierung aus, liefert eine gestreamte Antwort mit Quellenangaben. Chat ist **projektgescoped**: Retrieval berücksichtigt nur Dokumente, die `projectId` zugeordnet sind.
+**Abweichung vom ursprünglichen Plan:** Als der erste echte n8n-Workflow stand, stellte sich heraus, dass er über n8n's eingebauten **Chat Trigger** läuft, nicht über einen selbst gebauten Webhook mit dem unten ursprünglich geplanten Streaming-Contract. Chat Trigger hat sein eigenes, festes Request/Response-Format und liefert synchrones JSON statt eines Streams. Statt n8n auf das ursprüngliche Format umzubauen, übersetzt unser `/api/chat`-Route-Handler zwischen unserem Contract (Client → Next.js) und n8ns Format (Next.js → n8n). Der ursprünglich geplante Streaming-Contract steht als Referenz weiter unten, ist aber **nicht mehr die Wahrheit**.
+
+**Webhook-URL:** volle URL in `N8N_CHAT_WEBHOOK_URL` (eigene Env-Var, keine Base-URL+Pfad-Kombination — n8n vergibt pro Workflow eine UUID-Webhook-Adresse). Aktuell **ohne Auth** am Webhook selbst (kein `X-HRWIKI-Secret`-Check n8n-seitig).
+
+**Request an n8n** (von `/api/chat` gesendet)
+
+```json
+{ "chatInput": "Wie hoch war die Budgetabweichung?", "sessionId": "uuid" }
+```
+
+**Response von n8n** — einmaliges JSON, kein Stream:
+
+```json
+{ "output": "Im ersten Jahr … [Quelle](https://drive.google.com/...)" }
+```
+
+- `output` ist Markdown-Text; Quellenangaben sind als normale Markdown-Links **inline im Text**, keine separate `sources[]`-Struktur
+- Gesprächsverlauf wird von n8n serverseitig über `sessionId` geführt (vermutlich LangChain Memory Node) — `/api/chat` schickt deshalb **keine** `history` an n8n
+- **`projectId` wird vom Workflow aktuell nicht ausgewertet** — es gibt nur diesen einen, projektübergreifenden Chat-Workflow. `/api/chat` nimmt `projectId` weiterhin vom Client entgegen (Contract-Stabilität für später), reicht es aber nicht durch
+- Kein erkennbarer "kein Kontext gefunden"-Fall — das Modell antwortet stattdessen mit Rückfragen (siehe Beispielantwort oben im Test)
+
+**Request an `/api/chat`** (Client → Next.js, unverändert von Next.js aus gesehen)
+
+```json
+{ "projectId": "gymnasium-planegg", "sessionId": "uuid", "message": "Wie hoch war die Budgetabweichung?" }
+```
+
+**Response von `/api/chat`** (Next.js → Client)
+
+```json
+{ "message": "Im ersten Jahr … [Quelle](https://drive.google.com/...)" }
+```
+
+### Ursprünglich geplanter Contract (Referenz, aktuell nicht implementiert)
+
+Für den Fall, dass später ein eigener, projektgescopter Webhook mit Streaming und expliziten Quellenangaben gebaut wird (siehe "Offene Punkte" unten):
 
 **Request**
 
@@ -108,8 +143,6 @@ Der zentrale dynamische Endpunkt. Nimmt eine Nutzerfrage entgegen, führt Retrie
 
 **Response — Streaming (Vercel AI SDK Data Stream Protocol)**
 
-n8n muss die Antwort als Text-Stream (chunked transfer) liefern, kompatibel mit dem `ai`-Paket auf Client-Seite. Am Ende des Streams folgt ein finales JSON-Event mit Metadaten:
-
 ```
 data: {"type":"text-delta","text":"Im ersten Jahr "}
 data: {"type":"text-delta","text":"stehen dir 24 Urlaubstage zu."}
@@ -119,18 +152,13 @@ data: {"type":"sources","sources":[
 data: {"type":"finish"}
 ```
 
-**Fehlerfall** (kein passender Kontext gefunden): Antwort bleibt ehrlich statt zu halluzinieren —
+**Fehlerfall** (kein passender Kontext gefunden):
 
 ```json
 { "type": "no-context", "message": "Dazu habe ich keine passende Quelle gefunden. Bitte an HR wenden." }
 ```
 
-**Pflichtverhalten des Workflows:**
-1. Embedding der Nutzerfrage erzeugen
-2. Ähnlichkeitssuche in `document_chunks`, gefiltert auf `project_id = projectId` (Top-k, z. B. 5, Score-Schwelle z. B. > 0.75) — ein Projekt-Chat darf nie Dokumente eines anderen Projekts zitieren
-3. Falls kein Chunk über Schwelle → `no-context`-Antwort, kein LLM-Call (spart Kosten, verhindert Halluzination)
-4. Sonst: Chunks als Kontext an LLM, Systemprompt erzwingt Zitieren nur aus gelieferten Chunks
-5. Chat-Verlauf in `chat_messages` persistieren, inkl. `project_id` (Audit)
+Pflichtverhalten wäre gewesen: Embedding der Frage → Ähnlichkeitssuche gefiltert auf `project_id` → bei keinem Treffer über Score-Schwelle `no-context` ohne LLM-Call → sonst Chunks als Kontext ans LLM, Zitierpflicht nur aus gelieferten Chunks → Verlauf inkl. `project_id` persistieren.
 
 ---
 

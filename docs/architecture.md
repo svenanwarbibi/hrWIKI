@@ -75,10 +75,10 @@ Internes Portal: Nutzer chatten (RAG) mit klar definierten Unternehmensdaten und
 - **UI-Komponenten:** shadcn/ui (Radix-Primitives, im Repo besessen, kein Lock-in)
 - **Rendering-Strategie:**
   - Statische Seiten (Executive Summary, KPIs, Ansprechpartner): Server Components mit `fetch` + `revalidate` (ISR, z. B. alle 5 Minuten) — Daten ändern sich selten, kein Grund für Client-seitiges Polling.
-  - Chat: Client Component, Streaming über die Vercel AI SDK (`ai`/`@ai-sdk/react`, `useChat`), die gegen den eigenen `/api/chat`-Route-Handler spricht.
-- **Auth:** Auth.js (NextAuth) mit Microsoft-Entra-ID-Provider (SSO für Mitarbeitende) — HR-Daten sind nicht für anonyme Nutzer gedacht. Middleware (`src/middleware.ts`) sperrt alle Routen außer `/login` hinter einer gültigen Session.
+  - Chat: Client Component mit einfachem `fetch`-Request/Response gegen den eigenen `/api/chat`-Route-Handler — kein Streaming, da der reale n8n-Chat-Workflow (n8n Chat Trigger) synchrones JSON liefert, siehe `data-contract.md`, Abschnitt 1. Ursprünglich war Streaming über die Vercel AI SDK geplant; das wurde verworfen, sobald der tatsächliche n8n-Workflow stand.
+- **Auth:** Auth.js (NextAuth) mit Microsoft-Entra-ID-Provider (SSO für Mitarbeitende) — HR-Daten sind nicht für anonyme Nutzer gedacht. Middleware (`src/middleware.ts`) sperrt alle Routen außer `/login` hinter einer gültigen Session. **Aktuell für den Workshop-Demo-Deploy deaktiviert** (`AUTH_GATE_DISABLED` in `middleware.ts`).
 - **Route Handler als BFF:**
-  - `POST /api/chat` — proxyt zu n8n-Chat-Webhook, reicht Streaming-Response durch
+  - `POST /api/chat` — proxyt zu `N8N_CHAT_WEBHOOK_URL`, übersetzt zwischen unserem Contract und n8ns Chat-Trigger-Shape (`chatInput`/`sessionId` → `output`)
   - `GET /api/executive-summary`, `GET /api/kpis`, `GET /api/contacts?type=internal|external` — proxyt zu den jeweiligen n8n-Webhooks, cached serverseitig
 
 ## Backend-Orchestrierung — n8n
@@ -131,7 +131,6 @@ Der genannte Stack (n8n, Vercel, Next.js, JS/TS, Tailwind, React) beschreibt Hos
 
 | Zweck | Paket | Warum nötig |
 |---|---|---|
-| Streaming-Chat-UI | `ai`, `@ai-sdk/react` | `useChat`-Hook, SSE/Streaming-Handling gegen `/api/chat` — sonst muss Streaming manuell mit `ReadableStream` gebaut werden |
 | UI-Komponenten | `shadcn/ui` (Radix + `class-variance-authority`, `clsx`, `tailwind-merge`) | Accessible Primitives (Dialog, Dropdown, Tabs) fehlen in reinem Tailwind |
 | Icons | `lucide-react` | Kein Icon-Set im genannten Stack enthalten |
 | Formulare/Validierung | `react-hook-form`, `zod` | Admin-Formulare (KPI/Kontakt pflegen) brauchen Validierung; `zod` zusätzlich für API-Response-Validierung |
@@ -165,6 +164,9 @@ Alle in `package.json` des Scaffolds bereits eingetragen (siehe `apps/`-Struktur
 
 ## Offene Punkte für die nächste Iteration
 
+- Chat-Workflow projektgescopt bauen (aktuell ein einziger, projektübergreifender n8n Chat-Trigger-Workflow — `projectId` wird nicht ausgewertet, siehe `data-contract.md` Abschnitt 1)
+- Auth am Chat-Webhook nachrüsten (aktuell ohne Secret/Header-Auth erreichbar)
+- Echte Session-Prüfung in `src/middleware.ts` (Auth-Gate ist für den Workshop-Demo-Deploy deaktiviert, `/login` existiert noch nicht)
 - Zugriffssteuerung pro KPI/Kontakt-Kategorie (z. B. Executive Summary nur für Führungsebene)?
 - Mehrsprachigkeit (DE/EN) — analog zum Hokua-Projekt: aus Kostengründen zunächst einsprachig, Strings aber von Anfang an nicht hart in JSX verdrahten
 - Feedback-Mechanismus (Daumen hoch/runter) auf Chat-Antworten, um RAG-Qualität zu messen

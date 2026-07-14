@@ -1,50 +1,42 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
-import { MessageBubble } from "./MessageBubble";
-
-function extractText(parts: UIMessage["parts"]) {
-  return parts
-    .filter((p): p is Extract<UIMessage["parts"][number], { type: "text" }> => p.type === "text")
-    .map((p) => p.text)
-    .join("");
-}
+import { MessageBubble, type ChatMessage } from "./MessageBubble";
 
 export function ChatWindow({ projectId }: { projectId: string }) {
   const [input, setInput] = useState("");
   const [sessionId] = useState(() => crypto.randomUUID());
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [status, setStatus] = useState<"ready" | "loading" | "error">("ready");
 
-  const { messages, sendMessage, status } = useChat({
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-      prepareSendMessagesRequest: ({ messages: allMessages }) => {
-        const last = allMessages[allMessages.length - 1];
-        const history = allMessages.slice(0, -1).map((m) => ({
-          role: m.role as "user" | "assistant",
-          content: extractText(m.parts),
-        }));
-        return {
-          body: {
-            projectId,
-            sessionId,
-            message: last ? extractText(last.parts) : "",
-            history,
-          },
-        };
-      },
-    }),
-  });
-
-  const isBusy = status === "submitted" || status === "streaming";
-
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!input.trim() || isBusy) return;
-    sendMessage({ text: input });
+    const text = input.trim();
+    if (!text || status === "loading") return;
+
+    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: "user", content: text };
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setStatus("loading");
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId, sessionId, message: text }),
+      });
+
+      if (!res.ok) throw new Error("upstream error");
+
+      const data = (await res.json()) as { message: string };
+      setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "assistant", content: data.message }]);
+      setStatus("ready");
+    } catch {
+      setStatus("error");
+    }
   }
+
+  const isBusy = status === "loading";
 
   return (
     <div className="flex flex-1 flex-col overflow-hidden">

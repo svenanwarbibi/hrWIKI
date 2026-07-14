@@ -1,41 +1,40 @@
-import { callN8nWebhook } from "@/lib/n8n";
 import { z } from "zod";
-
-export const runtime = "edge";
+import { env } from "@/lib/env";
 
 const requestSchema = z.object({
   projectId: z.string().min(1),
   sessionId: z.string(),
   message: z.string().min(1),
-  history: z.array(
-    z.object({
-      role: z.enum(["user", "assistant"]),
-      content: z.string(),
-    }),
-  ),
 });
 
 export async function POST(req: Request) {
-  const body = requestSchema.parse(await req.json());
+  const { sessionId, message } = requestSchema.parse(await req.json());
 
-  const upstream = await callN8nWebhook("/webhook/chat", {
+  // n8n Chat Trigger erwartet chatInput/sessionId, nicht unseren eigenen
+  // Contract-Shape aus docs/data-contract.md — projectId wird vom
+  // aktuell einzigen, projektübergreifenden Workflow (noch) nicht
+  // ausgewertet. n8n führt den Gesprächsverlauf serverseitig über
+  // sessionId, daher wird hier keine history mitgeschickt.
+  const upstream = await fetch(env.N8N_CHAT_WEBHOOK_URL, {
     method: "POST",
-    body: JSON.stringify(body),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chatInput: message, sessionId }),
   });
 
-  if (!upstream.ok || !upstream.body) {
+  if (!upstream.ok) {
     return Response.json(
-      { error: { code: "UPSTREAM_ERROR", message: "n8n hat keine Antwort geliefert." } },
+      { error: { code: "UPSTREAM_ERROR", message: "n8n hat keine gültige Antwort geliefert." } },
       { status: 502 },
     );
   }
 
-  // Der Stream wird unveraendert an den Client durchgereicht (Vercel AI SDK
-  // Data Stream Protocol) — n8n ist verantwortlich fuer das Format.
-  return new Response(upstream.body, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-    },
-  });
+  const data = (await upstream.json()) as { output?: string };
+  if (!data.output) {
+    return Response.json(
+      { error: { code: "UPSTREAM_ERROR", message: "n8n-Antwort hatte kein 'output'-Feld." } },
+      { status: 502 },
+    );
+  }
+
+  return Response.json({ message: data.output });
 }
