@@ -1,6 +1,8 @@
 import type { ProjectKpis } from "@/types";
 import { PeopleCountCard } from "./PeopleCountCard";
 
+const NOT_DOCUMENTED = "nicht in den Projektdokumenten belegt";
+
 const dateFormatter = new Intl.DateTimeFormat("de-DE", { year: "numeric", month: "long", day: "numeric" });
 
 function formatDate(iso: string) {
@@ -12,8 +14,16 @@ function formatCurrency(value: number, currency: string) {
 }
 
 function BudgetCard({ budget }: { budget: ProjectKpis["budget"] }) {
-  const delta =
-    budget.actual !== null ? ((budget.actual - budget.plan) / budget.plan) * 100 : null;
+  if (!budget) {
+    return (
+      <div className="border border-plan-black/15 p-4">
+        <p className="text-sm text-slate-gray">Budget</p>
+        <p className="mt-1 text-sm text-slate-gray">{NOT_DOCUMENTED}</p>
+      </div>
+    );
+  }
+
+  const delta = budget.actual !== null ? ((budget.actual - budget.plan) / budget.plan) * 100 : null;
 
   return (
     <div className="border border-plan-black/15 p-4">
@@ -47,41 +57,55 @@ export function ProjectMetaKpis({ kpis }: { kpis: ProjectKpis }) {
     <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div className="border border-plan-black/15 p-4">
         <p className="text-sm text-slate-gray">Auftraggeber / Bauherr</p>
-        <p className="mt-1 font-display text-lg font-bold text-plan-black">{kpis.client}</p>
+        <p className="mt-1 font-display text-lg font-bold text-plan-black">
+          {kpis.client ?? <span className="text-sm font-sans font-normal text-slate-gray">{NOT_DOCUMENTED}</span>}
+        </p>
       </div>
 
       <div className="border border-plan-black/15 p-4">
         <p className="text-sm text-slate-gray">Zeitraum</p>
-        <p className="mt-1 text-sm text-plan-black">
-          {formatDate(kpis.startDate)}
-          <br />
-          bis {formatDate(kpis.endDate)}
-        </p>
+        {kpis.startDate && kpis.endDate ? (
+          <p className="mt-1 text-sm text-plan-black">
+            {formatDate(kpis.startDate)}
+            <br />
+            bis {formatDate(kpis.endDate)}
+          </p>
+        ) : (
+          <p className="mt-1 text-sm text-slate-gray">{NOT_DOCUMENTED}</p>
+        )}
       </div>
 
       <BudgetCard budget={kpis.budget} />
 
-      <PeopleCountCard label="Externe Dienstleister" count={kpis.externalProviders.length} unitLabel="beteiligt">
-        <ul className="space-y-2">
-          {kpis.externalProviders.map((p) => (
-            <li key={p.id}>
-              <p className="font-medium text-plan-black">{p.name}</p>
-              <p className="text-slate-gray">{p.category}</p>
-              <p className="text-slate-gray">{p.address}</p>
-            </li>
-          ))}
-        </ul>
+      <PeopleCountCard label="Projektanten" count={kpis.externalProviders.length} unitLabel="beteiligt">
+        {kpis.externalProviders.length === 0 ? (
+          <p className="text-slate-gray">{NOT_DOCUMENTED}</p>
+        ) : (
+          <ul className="space-y-2">
+            {kpis.externalProviders.map((p) => (
+              <li key={p.id}>
+                <p className="font-medium text-plan-black">{p.name}</p>
+                <p className="text-slate-gray">{p.category}</p>
+                <p className="text-slate-gray">{p.address}</p>
+              </li>
+            ))}
+          </ul>
+        )}
       </PeopleCountCard>
 
       <PeopleCountCard label="Interne Mitarbeitende" count={kpis.internalStaff.length} unitLabel="beteiligt">
-        <ul className="space-y-2">
-          {kpis.internalStaff.map((s) => (
-            <li key={s.id}>
-              <p className="font-medium text-plan-black">{s.name}</p>
-              <p className="text-slate-gray">{s.role}</p>
-            </li>
-          ))}
-        </ul>
+        {kpis.internalStaff.length === 0 ? (
+          <p className="text-slate-gray">{NOT_DOCUMENTED}</p>
+        ) : (
+          <ul className="space-y-2">
+            {kpis.internalStaff.map((s) => (
+              <li key={s.id}>
+                <p className="font-medium text-plan-black">{s.name}</p>
+                <p className="text-slate-gray">{s.role ?? "Rolle nicht dokumentiert"}</p>
+              </li>
+            ))}
+          </ul>
+        )}
       </PeopleCountCard>
     </div>
   );

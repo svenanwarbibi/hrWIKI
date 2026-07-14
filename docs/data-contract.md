@@ -19,10 +19,10 @@ Für die Übersichtsseite `/projects`.
   "updatedAt": "2026-07-01T09:00:00Z",
   "projects": [
     {
-      "id": "gymnasium-planegg",
-      "slug": "gymnasium-planegg",
-      "title": "Gymnasium Planegg",
-      "client": "Gemeinde Planegg",
+      "id": "flg-planegg",
+      "slug": "flg-planegg",
+      "title": "FLG Planegg – Erweiterungsbau",
+      "client": null,
       "category": "bildung",
       "status": "in_progress",
       "thumbnailUrl": "https://.../planegg.jpg"
@@ -44,37 +44,38 @@ Für `/projects/[slug]`. Liefert alle Daten für Executive Summary und KPI-Berei
 
 ```json
 {
-  "id": "gymnasium-planegg",
-  "slug": "gymnasium-planegg",
-  "title": "Gymnasium Planegg",
+  "id": "flg-planegg",
+  "slug": "flg-planegg",
+  "title": "FLG Planegg – Erweiterungsbau",
   "updatedAt": "2026-07-01T09:00:00Z",
   "executiveSummary": {
-    "aufgabe": "Erweiterung und energetische Sanierung des Gymnasiums Planegg um zusätzliche Klassen- und Fachräume sowie eine neue Mensa, bei laufendem Schulbetrieb.",
-    "herausforderungen": "Bauen im laufenden Betrieb, denkmalrechtliche Auflagen am Bestandsbau der 1970er Jahre, verdichteter Baustellenzugang durch angrenzende Wohnbebauung.",
-    "ergebnis": "Fertigstellung von 12 neuen Klassenräumen, einer Mensa für 300 Personen und einer auf Passivhaus-Niveau sanierten Fassade; Übergabe drei Monate vor Fertigstellungstermin des Fachplaners."
+    "aufgabe": "…",
+    "herausforderungen": "…",
+    "ergebnis": "…"
   },
   "kpis": {
-    "client": "Gemeinde Planegg",
-    "startDate": "2023-03-01",
-    "endDate": "2026-09-30",
-    "budget": {
-      "currency": "EUR",
-      "plan": 18500000,
-      "actual": 19150000
-    },
+    "client": null,
+    "startDate": null,
+    "endDate": null,
+    "budget": null,
     "externalProviders": [
       {
         "id": "ep-001",
-        "name": "Müller Tragwerksplanung GmbH",
-        "category": "Statik",
-        "address": "Rosenheimer Str. 12, 81669 München"
+        "name": "Zimmerei - Holzbau Schiller GmbH & Co.KG",
+        "category": "Zimmerei / Holzbau",
+        "address": "Oberfeld 2, 94259 Kirchberg i. W."
       }
     ],
     "internalStaff": [
       {
         "id": "is-001",
-        "name": "Anna Keller",
-        "role": "Projektleitung"
+        "name": "Herr Marschner",
+        "role": "Bauleitung"
+      },
+      {
+        "id": "is-003",
+        "name": "Herr Brodbeck",
+        "role": null
       }
     ]
   }
@@ -82,9 +83,10 @@ Für `/projects/[slug]`. Liefert alle Daten für Executive Summary und KPI-Berei
 ```
 
 - 404 (`{ "error": { "code": "NOT_FOUND", ... } }`), falls `slug` nicht existiert
-- `budget.actual` kann während der Bauphase `null` sein (noch nicht final abgerechnet) — UI zeigt dann nur `plan`
-- `externalProviders[].category` ist ein freier String (z. B. `Statik`, `TGA`, `Freianlagen`, `Bauphysik`)
-- `internalStaff[].role` ist ein freier String (z. B. `Projektleitung`, `Bauleitung`, `Entwurf`)
+- **`client`, `startDate`, `endDate`, `budget` sind `null`, wenn in den Quelldokumenten nicht explizit belegt** — nie einen plausiblen Wert erfinden. UI zeigt in diesem Fall "nicht in den Projektdokumenten belegt" statt eines Werts. Analog `internalStaff[].role`: `null`, wenn keine Rolle explizit genannt ist
+- `budget.actual` kann zusätzlich innerhalb eines vorhandenen `budget`-Objekts während der Bauphase `null` sein (noch nicht final abgerechnet) — UI zeigt dann nur `plan`
+- `externalProviders[].category` ist ein freier String (z. B. `Statik`, `TGA`, `Freianlagen`, `Bauphysik`, `Zimmerei / Holzbau`)
+- `internalStaff[].role` ist ein freier String oder `null`
 
 ---
 
@@ -114,7 +116,7 @@ Für `/projects/[slug]`. Liefert alle Daten für Executive Summary und KPI-Berei
 **Request an `/api/chat`** (Client → Next.js, unverändert von Next.js aus gesehen)
 
 ```json
-{ "projectId": "gymnasium-planegg", "sessionId": "uuid", "message": "Wie hoch war die Budgetabweichung?" }
+{ "projectId": "flg-planegg", "sessionId": "uuid", "message": "Wie hoch war die Budgetabweichung?" }
 ```
 
 **Response von `/api/chat`** (Next.js → Client)
@@ -131,7 +133,7 @@ Für den Fall, dass später ein eigener, projektgescopter Webhook mit Streaming 
 
 ```json
 {
-  "projectId": "gymnasium-planegg",
+  "projectId": "flg-planegg",
   "sessionId": "uuid",
   "message": "Wie hoch war die Budgetabweichung?",
   "history": [

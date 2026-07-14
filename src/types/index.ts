@@ -61,7 +61,8 @@ export interface ProjectSummary {
   id: string;
   slug: string;
   title: string;
-  client: string;
+  // null, wenn kein Auftraggeber in den Projektdokumenten belegt ist.
+  client: string | null;
   category: string;
   status: ProjectStatus;
   thumbnailUrl?: string;
@@ -94,14 +95,18 @@ export interface ExternalProvider {
 export interface InternalStaffMember {
   id: string;
   name: string;
-  role: string;
+  // null, wenn in den Quelldokumenten keine explizite Rolle genannt ist —
+  // UI zeigt dann "Rolle nicht dokumentiert" statt einer Vermutung.
+  role: string | null;
 }
 
 export interface ProjectKpis {
-  client: string;
-  startDate: string;
-  endDate: string;
-  budget: ProjectBudget;
+  // null = nicht eindeutig aus den Projektdokumenten belegbar (kein Wert
+  // erfunden). UI muss diesen Fall explizit als "nicht verfügbar" zeigen.
+  client: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  budget: ProjectBudget | null;
   externalProviders: ExternalProvider[];
   internalStaff: InternalStaffMember[];
 }

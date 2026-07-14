@@ -29,7 +29,9 @@ export default async function ProjectsPage() {
               >
                 <span>
                   <span className="block text-lg font-medium text-plan-black">{p.title}</span>
-                  <span className="mt-1 block text-sm text-slate-gray">{p.client}</span>
+                  <span className="mt-1 block text-sm text-slate-gray">
+                    {p.client ?? "nicht in den Projektdokumenten belegt"}
+                  </span>
                 </span>
                 <span className="shrink-0 text-right text-sm text-slate-gray">
                   <span className="nav-lowercase block">{p.category}</span>

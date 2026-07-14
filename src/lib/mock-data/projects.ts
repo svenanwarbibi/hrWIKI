@@ -1,15 +1,20 @@
 import type { Project, ProjectSummary } from "@/types";
 
 /**
- * Platzhalterdaten für den Prototypen. Fiktive Namen/Adressen — ersetzt
- * durch echte Daten aus Supabase, sobald die n8n-Webhooks aus
- * docs/data-contract.md (0a/0b) stehen. Siehe src/lib/data/projects.ts.
+ * KPIs und Projektanten/Mitarbeitende hier sind aus dem echten n8n-Chat-
+ * Workflow extrahiert (echte Projektdokumente von hirner & riehl, Gebäude
+ * "FLG Planegg – Erweiterungsbau") — nicht erfunden. Felder, die in den
+ * Dokumenten nicht explizit belegt sind (Auftraggeber, Zeitraum, Budget),
+ * sind bewusst `null` statt geraten. Ersetzt durch einen echten
+ * `GET /webhook/project`-Aufruf, sobald der stünde (siehe
+ * src/lib/data/projects.ts). Die Executive Summary unten ist weiterhin
+ * Platzhaltertext, noch nicht aus den Dokumenten extrahiert.
  */
 
 export const MOCK_PROJECT: Project = {
-  id: "gymnasium-planegg",
-  slug: "gymnasium-planegg",
-  title: "Gymnasium Planegg",
+  id: "flg-planegg",
+  slug: "flg-planegg",
+  title: "FLG Planegg – Erweiterungsbau",
   updatedAt: "2026-07-01T09:00:00Z",
   executiveSummary: {
     aufgabe:
@@ -20,54 +25,36 @@ export const MOCK_PROJECT: Project = {
       "Fertigstellung von 12 neuen Klassenräumen, einer Mensa für 300 Personen und einer auf Passivhaus-Niveau sanierten Fassade; Übergabe drei Monate vor Fertigstellungstermin des Fachplaners.",
   },
   kpis: {
-    client: "Gemeinde Planegg",
-    startDate: "2023-03-01",
-    endDate: "2026-09-30",
-    budget: {
-      currency: "EUR",
-      plan: 18_500_000,
-      actual: 19_150_000,
-    },
+    // Kein Auftraggeber namentlich in den Dokumenten genannt — nur ein
+    // Verteiler-Kontakt (muhr@planegg.de) als Hinweis, siehe Chat-Beleg.
+    client: null,
+    startDate: null,
+    endDate: null,
+    budget: null,
     externalProviders: [
       {
         id: "ep-001",
-        name: "Müller Tragwerksplanung GmbH",
-        category: "Statik",
-        address: "Rosenheimer Str. 12, 81669 München",
-      },
-      {
-        id: "ep-002",
-        name: "Ingenieurbüro Fischer",
-        category: "TGA",
-        address: "Landsberger Str. 88, 80339 München",
-      },
-      {
-        id: "ep-003",
-        name: "Freiraum Landschaftsarchitekten PartG",
-        category: "Freianlagen",
-        address: "Kaiserstraße 5, 80801 München",
-      },
-      {
-        id: "ep-004",
-        name: "Dr. Wagner Bauphysik",
-        category: "Bauphysik",
-        address: "Agnesstraße 20, 80798 München",
+        name: "Zimmerei - Holzbau Schiller GmbH & Co.KG",
+        category: "Zimmerei / Holzbau",
+        address: "Oberfeld 2, 94259 Kirchberg i. W.",
       },
     ],
     internalStaff: [
-      { id: "is-001", name: "Anna Keller", role: "Projektleitung" },
-      { id: "is-002", name: "Tobias Reuter", role: "Bauleitung" },
-      { id: "is-003", name: "Lena Vogt", role: "Entwurf" },
+      { id: "is-001", name: "Herr Marschner", role: "Bauleitung" },
+      { id: "is-002", name: "Frau Bawej", role: "Bauleitung" },
+      { id: "is-003", name: "Herr Brodbeck", role: null },
     ],
   },
 };
 
+// Bewusst weiterhin fiktive Platzhalter für die Übersichtsliste (siehe
+// Abstimmung) — nur MOCK_PROJECT oben ist aus echten Dokumenten belegt.
 export const MOCK_PROJECT_LIST: ProjectSummary[] = [
   {
-    id: "gymnasium-planegg",
-    slug: "gymnasium-planegg",
-    title: "Gymnasium Planegg",
-    client: "Gemeinde Planegg",
+    id: "flg-planegg",
+    slug: "flg-planegg",
+    title: "FLG Planegg – Erweiterungsbau",
+    client: null,
     category: "bildung",
     status: "in_progress",
   },
